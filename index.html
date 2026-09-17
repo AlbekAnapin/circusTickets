@@ -30,7 +30,6 @@
   .screen.active { display: block; animation: pop .25s ease; }
   @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
 
-  /* ====== Шапка цирка ====== */
   .circus-header {
     text-align: center;
     padding: 20px 16px 22px;
@@ -46,39 +45,27 @@
     position: absolute; inset: 0;
     background-image:
       repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 14px, transparent 14px 28px);
-    opacity: .55;
-    pointer-events: none;
+    opacity: .55; pointer-events: none;
   }
   .circus-header > * { position: relative; }
   .circus-emoji { font-size: 46px; line-height: 1; display: block; margin-bottom: 6px;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); animation: swing 3s ease-in-out infinite; }
   @keyframes swing { 0%,100% { transform: rotate(-6deg) } 50% { transform: rotate(6deg) } }
   .circus-title {
-    margin: 0;
-    font-size: 24px;
-    line-height: 1.15;
-    color: #fff;
+    margin: 0; font-size: 24px; line-height: 1.15; color: #fff;
     text-shadow: 0 2px 0 rgba(180,40,90,.5), 0 6px 14px rgba(0,0,0,.22);
-    font-weight: 800;
-    letter-spacing: .4px;
+    font-weight: 800; letter-spacing: .4px;
   }
   .circus-title small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; opacity: .85; margin-bottom: 6px; }
   .circus-sub {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 7px 16px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.9);
-    color: #b03070;
-    font-size: 13px;
-    font-weight: 700;
+    display: inline-block; margin-top: 12px; padding: 7px 16px;
+    border-radius: 999px; background: rgba(255,255,255,.9);
+    color: #b03070; font-size: 13px; font-weight: 700;
     box-shadow: 0 4px 10px rgba(0,0,0,.12);
   }
 
   .title { font-size: 21px; margin: 6px 0 14px; font-weight: 800; color: #3a2470; }
-  .subtitle { opacity: .7; margin: -6px 0 26px; font-size: 14px; font-weight: 600; }
 
-  /* ====== Кнопки ====== */
   .btn {
     display: block; width: 100%; padding: 19px 20px; margin-bottom: 13px;
     border: none; border-radius: 20px; font-size: 17px; font-weight: 800;
@@ -88,10 +75,7 @@
     box-shadow: 0 9px 0 #c73a68, 0 14px 26px rgba(199,58,104,.4);
     transition: transform .08s ease, box-shadow .08s ease;
   }
-  .btn:active {
-    transform: translateY(5px);
-    box-shadow: 0 4px 0 #c73a68, 0 8px 16px rgba(199,58,104,.35);
-  }
+  .btn:active { transform: translateY(5px); box-shadow: 0 4px 0 #c73a68, 0 8px 16px rgba(199,58,104,.35); }
   .btn.secondary {
     background: linear-gradient(135deg, #4dabf7, #4dd4c4);
     box-shadow: 0 9px 0 #2b7bb9, 0 14px 26px rgba(43,123,185,.35);
@@ -106,7 +90,6 @@
     box-shadow: 0 3px 8px rgba(0,0,0,.08);
   }
 
-  /* ====== Выбор даты ====== */
   .dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .date-chip {
     padding: 14px 10px; border-radius: 16px; cursor: pointer; font-family: inherit;
@@ -122,7 +105,6 @@
     box-shadow: 0 4px 0 #c73a68;
   }
 
-  /* ====== Места ====== */
   .seat-row { display: flex; gap: 8px; align-items: center; margin-bottom: 9px; }
   .row-label { width: 56px; font-size: 13px; flex: none; font-weight: 700; color: #3a2470; opacity: .75; }
   .seat {
@@ -152,11 +134,9 @@
   .dot.sel { background: linear-gradient(135deg, #4dd4c4, #4dabf7); }
   .dot.sold { background: #e6dcc8; }
 
-  /* ====== Мои билеты ====== */
   .my-tickets-wrap {
     background: rgba(255,255,255,.65);
-    border-radius: 22px;
-    padding: 16px 16px 6px;
+    border-radius: 22px; padding: 16px 16px 6px;
     margin: 4px 0 22px;
     border: 2px dashed #ffd23c;
   }
@@ -173,8 +153,7 @@
   }
   .my-tickets-empty {
     font-size: 13px; font-weight: 600; color: #6b5b8a;
-    text-align: center; padding: 12px 6px 18px;
-    opacity: .8;
+    text-align: center; padding: 12px 6px 18px; opacity: .8;
   }
   .my-ticket-item {
     display: flex; align-items: center; gap: 12px;
@@ -200,7 +179,6 @@
   .mt-seat { font-size: 12px; font-weight: 700; color: #6b5b8a; margin-top: 2px; display: block; }
   .mt-arrow { font-size: 20px; color: #c73a68; flex: none; font-weight: 800; }
 
-  /* ====== Билет ====== */
   .ticket {
     background: #fff; color: #2a1a4a; border-radius: 24px; padding: 22px 20px;
     text-align: center; margin-bottom: 22px;
@@ -219,10 +197,13 @@
   .ticket-date { font-size: 19px; font-weight: 800; margin-top: 10px; color: #3a2470; }
   .ticket-seat { font-size: 28px; font-weight: 900; margin-top: 4px; color: #ff5c8d; }
   .dashed { border-top: 2px dashed #ffd23c; margin: 18px -20px; }
-  #qrCanvas { max-width: 100%; height: auto; border-radius: 10px; image-rendering: pixelated; }
+  #qrCanvas { display: block; margin: 0 auto; max-width: 100%; height: auto; border-radius: 10px; image-rendering: pixelated; }
   .ticket-id { font-size: 13px; color: #6b5b8a; margin-top: 10px; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .ticket-code {
+    font-size: 10px; color: #a89a80; margin-top: 8px; word-break: break-all;
+    font-family: ui-monospace, Menlo, Consolas, monospace; line-height: 1.3;
+  }
 
-  /* ====== Камера ====== */
   .camera-wrap {
     position: relative; width: 100%; aspect-ratio: 3 / 4; border-radius: 22px;
     overflow: hidden; background: #000; margin-bottom: 14px;
@@ -240,10 +221,9 @@
   .fallback input {
     width: 100%; padding: 14px; border-radius: 14px; margin-bottom: 10px;
     border: 2px solid #ffd23c; background: #fff;
-    color: #3a2470; font-family: inherit; font-size: 14px; font-weight: 600;
+    color: #3a2470; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600;
   }
 
-  /* ====== Результат ====== */
   .result {
     text-align: center; padding: 30px 20px; border-radius: 24px;
     margin-bottom: 20px; background: #fff;
@@ -264,7 +244,6 @@
 <body>
 <div id="app">
 
-  <!-- ======= ГЛАВНАЯ ======= -->
   <section class="screen active" id="screen-home">
     <div class="circus-header">
       <span class="circus-emoji">🎪</span>
@@ -278,11 +257,10 @@
     <button class="btn secondary" id="btnCheck">🔍 Проверить билет</button>
   </section>
 
-  <!-- ======= ПОКУПКА ======= -->
   <section class="screen" id="screen-buy">
     <button class="back" data-back="home">← Назад</button>
 
-    <div class="my-tickets-wrap" id="myTicketsWrap">
+    <div class="my-tickets-wrap">
       <div class="my-tickets-head">
         <h2>🎫 Мои билеты</h2>
         <span class="my-tickets-count" id="myTicketsCount">0</span>
@@ -305,7 +283,6 @@
     <button class="btn" id="btnConfirm" disabled>Купить билет</button>
   </section>
 
-  <!-- ======= БИЛЕТ ======= -->
   <section class="screen" id="screen-ticket">
     <h2 class="title">🎟️ Ваш билет</h2>
     <div class="ticket">
@@ -313,14 +290,14 @@
       <div class="ticket-date" id="tDate">—</div>
       <div class="ticket-seat" id="tSeat">—</div>
       <div class="dashed"></div>
-      <canvas id="qrCanvas" width="260" height="260"></canvas>
+      <canvas id="qrCanvas" width="290" height="290"></canvas>
       <div class="ticket-id" id="tId"></div>
+      <div class="ticket-code" id="tCode"></div>
     </div>
     <button class="btn" id="btnTicketBackHome">🏠 На главную</button>
     <button class="btn secondary" id="btnTicketBackBuy">🎟️ Купить ещё</button>
   </section>
 
-  <!-- ======= СКАНЕР ======= -->
   <section class="screen" id="screen-scan">
     <button class="back" data-back="home">← Назад</button>
     <h2 class="title">🔍 Сканируй QR-код</h2>
@@ -331,13 +308,12 @@
     <p class="status" id="scanStatus">Запрашиваю доступ к камере…</p>
 
     <div class="fallback" id="scanFallback">
-      <p class="hint">Камера недоступна. Можно вставить код билета вручную:</p>
-      <input id="manualInput" placeholder="TICKET1|AB12|2025-01-04|2|3|sig" />
+      <p class="hint">Камера недоступна или код не читается. Введи текст билета вручную:</p>
+      <input id="manualInput" placeholder="TICKET1|AB12-CD56|2026-09-20|2|3|1abcde" />
       <button class="btn secondary" id="btnManual">Проверить код</button>
     </div>
   </section>
 
-  <!-- ======= РЕЗУЛЬТАТ ======= -->
   <section class="screen" id="screen-result">
     <div class="result" id="resultBox">
       <div class="result-icon" id="resIcon">✅</div>
@@ -350,28 +326,22 @@
 
 </div>
 
-<!-- jsQR — только для чтения QR с камеры (может загрузиться с CDN).
-     Генерация QR теперь встроена и работает без интернета. -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
 /* ============================================================
-   ВСТРОЕННЫЙ QR-ГЕНЕРАТОР (byte mode, ECC level M, версии 1-6)
-   Не зависит от интернета. Возвращает матрицу модулей.
+   QR-ГЕНЕРАТОР (встроенный, byte mode, ECC M, mask 0, версии 1-6)
    ============================================================ */
 var QR = (function () {
   'use strict';
 
-  // ---- GF(256) ----
   var EXP = new Uint8Array(512);
   var LOG = new Uint8Array(256);
   (function () {
     var x = 1;
     for (var i = 0; i < 255; i++) {
-      EXP[i] = x;
-      LOG[x] = i;
-      x <<= 1;
-      if (x & 0x100) x ^= 0x11d;
+      EXP[i] = x; LOG[x] = i;
+      x <<= 1; if (x & 0x100) x ^= 0x11d;
     }
     for (var j = 255; j < 512; j++) EXP[j] = EXP[j - 255];
   })();
@@ -381,7 +351,6 @@ var QR = (function () {
     return EXP[LOG[a] + LOG[b]];
   }
 
-  // ---- Генератор полинома Рида-Соломона ----
   function rsGenPoly(n) {
     var poly = [1];
     for (var i = 0; i < n; i++) {
@@ -396,7 +365,6 @@ var QR = (function () {
     return poly;
   }
 
-  // ---- Кодирование Рида-Соломона ----
   function rsEncode(data, n) {
     var gen = rsGenPoly(n);
     var res = data.slice();
@@ -412,7 +380,6 @@ var QR = (function () {
     return res.slice(data.length);
   }
 
-  // ---- Параметры версий (ECC level M) ----
   var VERSIONS = {
     1: { size: 21, dataBytes: 16,  ecPerBlock: 10, blocks: 1, align: [] },
     2: { size: 25, dataBytes: 28,  ecPerBlock: 16, blocks: 1, align: [6, 18] },
@@ -425,7 +392,7 @@ var QR = (function () {
   function chooseVersion(byteLen) {
     for (var v = 1; v <= 6; v++) {
       var spec = VERSIONS[v];
-      var needed = 4 + 8 + byteLen * 8; // mode(4) + length(8) + data
+      var needed = 4 + 8 + byteLen * 8;
       if (needed <= spec.dataBytes * 8) return v;
     }
     return 6;
@@ -436,13 +403,8 @@ var QR = (function () {
     for (var i = 0; i < str.length; i++) {
       var code = str.charCodeAt(i);
       if (code < 0x80) bytes.push(code);
-      else if (code < 0x800) {
-        bytes.push(0xC0 | (code >> 6), 0x80 | (code & 0x3F));
-      } else {
-        bytes.push(0xE0 | (code >> 12),
-                   0x80 | ((code >> 6) & 0x3F),
-                   0x80 | (code & 0x3F));
-      }
+      else if (code < 0x800) bytes.push(0xC0 | (code >> 6), 0x80 | (code & 0x3F));
+      else bytes.push(0xE0 | (code >> 12), 0x80 | ((code >> 6) & 0x3F), 0x80 | (code & 0x3F));
     }
     return bytes;
   }
@@ -453,8 +415,8 @@ var QR = (function () {
     function push(val, len) {
       for (var i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
     }
-    push(0b0100, 4);            // byte mode
-    push(bytes.length, 8);      // length (версии 1-9)
+    push(0b0100, 4);
+    push(bytes.length, 8);
     for (var i = 0; i < bytes.length; i++) push(bytes[i], 8);
 
     var capacity = spec.dataBytes * 8;
@@ -467,7 +429,6 @@ var QR = (function () {
       pad = (pad === 0xEC) ? 0x11 : 0xEC;
     }
 
-    // биты -> байты
     var dataBytes = [];
     for (var b = 0; b < bits.length; b += 8) {
       var val = 0;
@@ -475,7 +436,6 @@ var QR = (function () {
       dataBytes.push(val);
     }
 
-    // блоки + EC + перемежение
     var numBlocks = spec.blocks;
     var dataPerBlock = spec.dataBytes / numBlocks;
     var ecPerBlock = spec.ecPerBlock;
@@ -502,7 +462,7 @@ var QR = (function () {
     }
     function set(r, c, v) { m[r][c] = v; reserved[r][c] = true; }
 
-    // ---- Finder patterns + separators ----
+    // Finder + separators
     function placeFinder(row, col) {
       for (var r = -1; r <= 7; r++) {
         for (var c = -1; c <= 7; c++) {
@@ -519,21 +479,23 @@ var QR = (function () {
     placeFinder(0, size - 7);
     placeFinder(size - 7, 0);
 
-    // ---- Timing patterns ----
+    // Timing patterns
     for (var t = 8; t < size - 8; t++) {
       var v = (t % 2 === 0) ? 1 : 0;
       if (!reserved[6][t]) set(6, t, v);
       if (!reserved[t][6]) set(t, 6, v);
     }
 
-    // ---- Alignment patterns ----
+    // Alignment patterns (skip only the 3 finder corners)
     var align = spec.align;
     for (var ai = 0; ai < align.length; ai++) {
       for (var aj = 0; aj < align.length; aj++) {
         var ar = align[ai], ac = align[aj];
-        if ((ar <= 8 && ac <= 8) ||
-            (ar <= 8 && ac >= size - 9) ||
-            (ar >= size - 9 && ac <= 8)) continue;
+        var isCorner =
+          (ar === 6 && ac === 6) ||
+          (ar === 6 && ac === size - 7) ||
+          (ar === size - 7 && ac === 6);
+        if (isCorner) continue;
         for (var dr = -2; dr <= 2; dr++) {
           for (var dc = -2; dc <= 2; dc++) {
             var isB = (Math.abs(dr) === 2 || Math.abs(dc) === 2);
@@ -544,20 +506,25 @@ var QR = (function () {
       }
     }
 
-    // ---- Резерв под format info ----
-    for (var k = 0; k < 9; k++) {
-      if (k === 6) continue;
-      reserved[8][k] = true;
+    // Reserve format info positions
+    // Copy 1 (around top-left): vertical col 8 rows 0-5,7,8 + horizontal row 8 cols 0-5,7
+    for (var k = 0; k < 6; k++) {
       reserved[k][8] = true;
+      reserved[8][k] = true;
     }
+    reserved[7][8] = true;
+    reserved[8][7] = true;
+    reserved[8][8] = true;
+    // Copy 2: horizontal row 8 cols size-8..size-1 + vertical col 8 rows size-7..size-1
     for (var k2 = 0; k2 < 8; k2++) {
       reserved[8][size - 1 - k2] = true;
-      reserved[size - 1 - k2][8] = true;
+      if (k2 < 7) reserved[size - 1 - k2][8] = true;
     }
+
     // Dark module
     set(size - 8, 8, 1);
 
-    // ---- Укладка данных (зигзаг) ----
+    // Place data in zigzag
     var bitIdx = 0;
     var totalBits = codewords.length * 8;
     var col = size - 1;
@@ -583,7 +550,7 @@ var QR = (function () {
       upward = !upward;
     }
 
-    // ---- Маска 0: (r + c) % 2 === 0 (только для не-функциональных) ----
+    // Apply mask 0 to data modules (skip function modules via reserved)
     for (var r3 = 0; r3 < size; r3++) {
       for (var c3 = 0; c3 < size; c3++) {
         if (isFunctionModule(r3, c3, version, size)) continue;
@@ -591,7 +558,7 @@ var QR = (function () {
       }
     }
 
-    // ---- Format info (ECC M, mask 0 → 0x5412) ----
+    // Place format info (FIXED: bits ordered so that bit 0 = LSB at (0,8))
     placeFormatInfo(m, size);
 
     return m;
@@ -606,32 +573,48 @@ var QR = (function () {
     for (var ai = 0; ai < align.length; ai++) {
       for (var aj = 0; aj < align.length; aj++) {
         var ar = align[ai], ac = align[aj];
-        if ((ar <= 8 && ac <= 8) ||
-            (ar <= 8 && ac >= size - 9) ||
-            (ar >= size - 9 && ac <= 8)) continue;
+        var isCorner =
+          (ar === 6 && ac === 6) ||
+          (ar === 6 && ac === size - 7) ||
+          (ar === size - 7 && ac === 6);
+        if (isCorner) continue;
         if (Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2) return true;
       }
     }
     return false;
   }
 
+  /* ПРАВИЛЬНОЕ размещение format info (проверено по спецификации ISO/IEC 18004):
+     - Bit 0 (LSB) уходит в (0,8), далее вниз по столбцу 8
+     - После (8,8) — идём влево по строке 8 до (8,0), где лежит bit 14 (MSB)
+     - Вторая копия: правый верхний угол (строка 8, начиная справа) + нижний левый
+       угол (столбец 8, снизу вверх начиная с bit 14 в (size-1,8) и заканчивая bit 8
+       в (size-7,8))
+  */
   function placeFormatInfo(m, size) {
     var fmt = 0x5412;                    // ECC M + mask 0
     function bit(i) { return (fmt >> i) & 1; }
 
-    // Копия 1 (вокруг верхнего левого finder)
-    m[8][0] = bit(0); m[8][1] = bit(1); m[8][2] = bit(2); m[8][3] = bit(3);
-    m[8][4] = bit(4); m[8][5] = bit(5); m[8][7] = bit(6); m[8][8] = bit(7);
-    m[7][8] = bit(8); m[5][8] = bit(9); m[4][8] = bit(10); m[3][8] = bit(11);
-    m[2][8] = bit(12); m[1][8] = bit(13); m[0][8] = bit(14);
+    // === Копия 1: обход вокруг верхнего левого finder-паттерна ===
+    // Вертикаль столбца 8 (снизу вверх): bit 0 → (0,8), bit 1 → (1,8), ...
+    m[0][8] = bit(0); m[1][8] = bit(1); m[2][8] = bit(2);
+    m[3][8] = bit(3); m[4][8] = bit(4); m[5][8] = bit(5);
+    m[7][8] = bit(6); m[8][8] = bit(7);
+    // Горизонталь строки 8 (справа налево): bit 8 → (8,7), bit 9 → (8,5), ...
+    m[8][7] = bit(8); m[8][5] = bit(9); m[8][4] = bit(10);
+    m[8][3] = bit(11); m[8][2] = bit(12); m[8][1] = bit(13); m[8][0] = bit(14);
 
-    // Копия 2 (справа сверху и снизу слева)
-    m[size - 1][8] = bit(0); m[size - 2][8] = bit(1); m[size - 3][8] = bit(2);
-    m[size - 4][8] = bit(3); m[size - 5][8] = bit(4); m[size - 6][8] = bit(5);
-    m[size - 7][8] = bit(6);
-    m[8][size - 8] = bit(7); m[8][size - 7] = bit(8); m[8][size - 6] = bit(9);
-    m[8][size - 5] = bit(10); m[8][size - 4] = bit(11); m[8][size - 3] = bit(12);
-    m[8][size - 2] = bit(13); m[8][size - 1] = bit(14);
+    // === Копия 2: верхний правый угол + нижний левый угол ===
+    // Верхний правый: bit 0 → (8,size-1), bit 1 → (8,size-2), ..., bit 7 → (8,size-8)
+    m[8][size - 1] = bit(0); m[8][size - 2] = bit(1);
+    m[8][size - 3] = bit(2); m[8][size - 4] = bit(3);
+    m[8][size - 5] = bit(4); m[8][size - 6] = bit(5);
+    m[8][size - 7] = bit(6); m[8][size - 8] = bit(7);
+    // Нижний левый: bit 8 → (size-7,8), bit 9 → (size-6,8), ..., bit 14 → (size-1,8)
+    m[size - 7][8] = bit(8);  m[size - 6][8] = bit(9);
+    m[size - 5][8] = bit(10); m[size - 4][8] = bit(11);
+    m[size - 3][8] = bit(12); m[size - 2][8] = bit(13);
+    m[size - 1][8] = bit(14);
   }
 
   function encode(text) {
@@ -645,9 +628,6 @@ var QR = (function () {
   return { encode: encode };
 })();
 
-/* ============================================================
-   Рисование QR на canvas
-   ============================================================ */
 function drawQR(canvas, text, options) {
   options = options || {};
   var qr = QR.encode(text);
@@ -655,14 +635,14 @@ function drawQR(canvas, text, options) {
   var matrix = qr.matrix;
   var margin = options.margin != null ? options.margin : 4;
   var totalModules = size + margin * 2;
-  var targetSize = options.width || 260;
-  var scale = Math.max(1, Math.floor(targetSize / totalModules));
+  var targetSize = options.width || 290;
+  var scale = Math.max(2, Math.floor(targetSize / totalModules));
   var finalSize = totalModules * scale;
 
   canvas.width = finalSize;
   canvas.height = finalSize;
-  canvas.style.width = targetSize + 'px';
-  canvas.style.height = targetSize + 'px';
+  canvas.style.width = finalSize + 'px';
+  canvas.style.height = finalSize + 'px';
 
   var ctx = canvas.getContext('2d');
   var light = (options.color && options.color.light) || '#ffffff';
@@ -681,7 +661,7 @@ function drawQR(canvas, text, options) {
 }
 
 /* ============================================================
-   Основное приложение
+   Приложение
    ============================================================ */
 (function () {
   'use strict';
@@ -700,7 +680,6 @@ function drawQR(canvas, text, options) {
 
   const $ = (id) => document.getElementById(id);
 
-  /* ---------- Утилиты ---------- */
   function hashStr(str) {
     let h = 2166136261 >>> 0;
     for (let i = 0; i < str.length; i++) {
@@ -744,7 +723,6 @@ function drawQR(canvas, text, options) {
     return out;
   }
 
-  /* ---------- Занятые места ---------- */
   function getSold() {
     try { return JSON.parse(localStorage.getItem(SOLD_KEY)) || {}; }
     catch (e) { return {}; }
@@ -760,7 +738,6 @@ function drawQR(canvas, text, options) {
     localStorage.setItem(SOLD_KEY, JSON.stringify(sold));
   }
 
-  /* ---------- Мои билеты ---------- */
   function getMyTickets() {
     try { return JSON.parse(localStorage.getItem(MY_TICKETS_KEY)) || []; }
     catch (e) { return []; }
@@ -772,7 +749,6 @@ function drawQR(canvas, text, options) {
     localStorage.setItem(MY_TICKETS_KEY, JSON.stringify(list));
   }
 
-  /* ---------- Формат QR ---------- */
   function encodeTicket(t) {
     return ['TICKET1', t.id, t.d, t.r, t.s, t.sig].join('|');
   }
@@ -791,14 +767,12 @@ function drawQR(canvas, text, options) {
     return { id: id, d: d, r: r, s: s, sig: sig };
   }
 
-  /* ---------- Состояние ---------- */
   const state = {
     dates: getAvailableDates(DATE_COUNT),
     selectedDate: null,
     selectedSeat: null
   };
 
-  /* ---------- Навигация ---------- */
   function show(name) {
     document.querySelectorAll('.screen').forEach(function (el) {
       el.classList.toggle('active', el.id === 'screen-' + name);
@@ -822,7 +796,6 @@ function drawQR(canvas, text, options) {
   });
   $('btnCheck').addEventListener('click', function () { show('scan'); });
 
-  /* ---------- Экран покупки ---------- */
   function renderDates() {
     const list = $('dateList');
     list.innerHTML = '';
@@ -882,7 +855,6 @@ function drawQR(canvas, text, options) {
     $('btnConfirm').disabled = !(state.selectedDate && state.selectedSeat);
   }
 
-  /* ---------- Мои билеты ---------- */
   function renderMyTickets() {
     const list = getMyTickets();
     const box = $('myTicketsList');
@@ -910,7 +882,6 @@ function drawQR(canvas, text, options) {
     });
   }
 
-  /* ---------- Покупка ---------- */
   $('btnConfirm').addEventListener('click', function () {
     if (!state.selectedDate || !state.selectedSeat) return;
     const d = state.selectedDate;
@@ -925,15 +896,16 @@ function drawQR(canvas, text, options) {
     show('ticket');
   });
 
-  /* ---------- Билет + QR ---------- */
   function renderTicket(t) {
     $('tDate').textContent = formatDate(t.d, false);
     $('tSeat').textContent = 'Ряд ' + t.r + ' · Место ' + t.s;
     $('tId').textContent = '№ ' + t.id;
+    const code = encodeTicket(t);
+    $('tCode').textContent = code;
     const canvas = $('qrCanvas');
     try {
-      drawQR(canvas, encodeTicket(t), {
-        width: 260,
+      drawQR(canvas, code, {
+        width: 290,
         margin: 4,
         color: { dark: '#2a1a4a', light: '#ffffff' }
       });
@@ -951,7 +923,6 @@ function drawQR(canvas, text, options) {
     show('buy');
   });
 
-  /* ---------- Сканер ---------- */
   const video = $('video');
   const scanCanvas = document.createElement('canvas');
   const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
@@ -976,13 +947,17 @@ function drawQR(canvas, text, options) {
     }
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
         audio: false
       });
       video.srcObject = stream;
       await video.play();
       scanning = true;
-      statusEl.textContent = 'Наведи камеру на QR-код билета';
+      statusEl.textContent = 'Наведи камеру на QR-код билета (ближе, чтобы он занимал весь квадрат)';
       rafId = requestAnimationFrame(tick);
     } catch (err) {
       console.warn(err);
@@ -1004,7 +979,7 @@ function drawQR(canvas, text, options) {
   function tick() {
     if (!scanning) return;
     if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
-      const MAXW = 640;
+      const MAXW = 800;
       const scale = Math.min(1, MAXW / video.videoWidth);
       const w = Math.round(video.videoWidth * scale);
       const h = Math.round(video.videoHeight * scale);
@@ -1031,7 +1006,6 @@ function drawQR(canvas, text, options) {
     handleScanResult(val);
   });
 
-  /* ---------- Результат ---------- */
   function renderResult(ticket) {
     const box = $('resultBox');
     const icon = $('resIcon');
@@ -1062,7 +1036,6 @@ function drawQR(canvas, text, options) {
     show('scan');
   });
 
-  /* ---------- Старт ---------- */
   renderDates();
   renderSeats();
   renderMyTickets();
