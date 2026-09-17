@@ -152,6 +152,54 @@
   .dot.sel { background: linear-gradient(135deg, #4dd4c4, #4dabf7); }
   .dot.sold { background: #e6dcc8; }
 
+  /* ====== Мои билеты ====== */
+  .my-tickets-wrap {
+    background: rgba(255,255,255,.65);
+    border-radius: 22px;
+    padding: 16px 16px 6px;
+    margin: 4px 0 22px;
+    border: 2px dashed #ffd23c;
+  }
+  .my-tickets-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .my-tickets-head h2 { margin: 0; font-size: 17px; font-weight: 800; color: #3a2470; }
+  .my-tickets-count {
+    background: linear-gradient(135deg, #ff5c8d, #ff8a4c);
+    color: #fff; font-size: 12px; font-weight: 800;
+    padding: 4px 10px; border-radius: 999px;
+    box-shadow: 0 3px 8px rgba(199,58,104,.35);
+  }
+  .my-tickets-empty {
+    font-size: 13px; font-weight: 600; color: #6b5b8a;
+    text-align: center; padding: 12px 6px 18px;
+    opacity: .8;
+  }
+  .my-ticket-item {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border-radius: 16px;
+    padding: 12px 14px; margin-bottom: 10px;
+    border: 2px solid #ffe1a8;
+    box-shadow: 0 4px 0 #f0d78a;
+    cursor: pointer; text-align: left;
+    font-family: inherit; width: 100%;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .my-ticket-item:active { transform: translateY(3px); box-shadow: 0 1px 0 #f0d78a; }
+  .mt-icon {
+    font-size: 26px; line-height: 1;
+    width: 44px; height: 44px; flex: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff5c8d, #ff8a4c);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .mt-info { flex: 1; min-width: 0; }
+  .mt-date { font-size: 14px; font-weight: 800; color: #3a2470; }
+  .mt-seat { font-size: 12px; font-weight: 700; color: #6b5b8a; margin-top: 2px; }
+  .mt-arrow { font-size: 20px; color: #c73a68; flex: none; font-weight: 800; }
+
   /* ====== Билет ====== */
   .ticket {
     background: #fff; color: #2a1a4a; border-radius: 24px; padding: 22px 20px;
@@ -233,6 +281,16 @@
   <!-- ======= ПОКУПКА ======= -->
   <section class="screen" id="screen-buy">
     <button class="back" data-back="home">← Назад</button>
+
+    <!-- Мои билеты -->
+    <div class="my-tickets-wrap" id="myTicketsWrap">
+      <div class="my-tickets-head">
+        <h2>🎫 Мои билеты</h2>
+        <span class="my-tickets-count" id="myTicketsCount">0</span>
+      </div>
+      <div id="myTicketsList"></div>
+    </div>
+
     <h2 class="title">🎪 Выбери день</h2>
     <div class="dates" id="dateList"></div>
 
@@ -259,7 +317,8 @@
       <canvas id="qrCanvas"></canvas>
       <div class="ticket-id" id="tId"></div>
     </div>
-    <button class="btn" data-back="home">Готово</button>
+    <button class="btn" id="btnTicketBackHome">🏠 На главную</button>
+    <button class="btn secondary" id="btnTicketBackBuy">🎟️ Купить ещё</button>
   </section>
 
   <!-- ======= СКАНЕР ======= -->
@@ -305,6 +364,7 @@
   const SEATS = 5;
   const SECRET = 'sugar-ticket-42';
   const SOLD_KEY = 'ticket_sold_v1';
+  const MY_TICKETS_KEY = 'my_tickets_v1';    // купленные билеты (для "Мои билеты")
   const DATE_COUNT = 6;
 
   const WD_SHORT = ['вс','пн','вт','ср','чт','пт','сб'];
@@ -382,6 +442,20 @@
     localStorage.setItem(SOLD_KEY, JSON.stringify(sold));
   }
 
+  /* ======================= МОИ БИЛЕТЫ ======================= */
+  function getMyTickets() {
+    try { return JSON.parse(localStorage.getItem(MY_TICKETS_KEY)) || []; }
+    catch (e) { return []; }
+  }
+
+  function saveMyTicket(t) {
+    const list = getMyTickets();
+    list.unshift(t);          // новые — сверху
+    // храним максимум 20 последних
+    if (list.length > 20) list.length = 20;
+    localStorage.setItem(MY_TICKETS_KEY, JSON.stringify(list));
+  }
+
   /* ======================= ФОРМАТ QR ======================= */
   function encodeTicket(t) {
     return ['TICKET1', t.id, t.d, t.r, t.s, t.sig].join('|');
@@ -421,6 +495,7 @@
     });
     if (name === 'scan') startScanner();
     else stopScanner();
+    if (name === 'buy') renderMyTickets();
     window.scrollTo(0, 0);
   }
 
@@ -432,6 +507,7 @@
     state.selectedSeat = null;
     renderDates();
     renderSeats();
+    renderMyTickets();
     updateConfirm();
     show('buy');
   });
@@ -505,6 +581,39 @@
     $('btnConfirm').disabled = !(state.selectedDate && state.selectedSeat);
   }
 
+  /* ======================= МОИ БИЛЕТЫ — РЕНДЕР ======================= */
+  function renderMyTickets() {
+    const list = getMyTickets();
+    const box = $('myTicketsList');
+    const cnt = $('myTicketsCount');
+
+    cnt.textContent = list.length;
+    box.innerHTML = '';
+
+    if (list.length === 0) {
+      box.innerHTML = '<div class="my-tickets-empty">Пока нет купленных билетов 🎈<br>Выбери день и место ниже</div>';
+      return;
+    }
+
+    list.forEach(function (t) {
+      const item = document.createElement('button');
+      item.className = 'my-ticket-item';
+      item.innerHTML =
+        '<span class="mt-icon">🎟️</span>' +
+        '<span class="mt-info">' +
+          '<span class="mt-date">' + formatDate(t.d, true) + '</span>' +
+          '<span class="mt-seat">Ряд ' + t.r + ' · Место ' + t.s + ' · № ' + t.id + '</span>' +
+        '</span>' +
+        '<span class="mt-arrow">›</span>';
+      item.addEventListener('click', function () {
+        renderTicket(t);
+        show('ticket');
+      });
+      box.appendChild(item);
+    });
+  }
+
+  /* ======================= ПОКУПКА ======================= */
   $('btnConfirm').addEventListener('click', function () {
     if (!state.selectedDate || !state.selectedSeat) return;
 
@@ -516,12 +625,16 @@
     ticket.sig = makeSig(id, d, r, s);
 
     markSold(d, r, s);
+    saveMyTicket(ticket);          // запоминаем билет
     renderTicket(ticket);
     show('ticket');
   });
 
   /* ======================= БИЛЕТ + QR ======================= */
+  let currentTicket = null;
+
   function renderTicket(t) {
+    currentTicket = t;
     $('tDate').textContent = formatDate(t.d, false);
     $('tSeat').textContent = 'Ряд ' + t.r + ' · Место ' + t.s;
     $('tId').textContent = '№ ' + t.id;
@@ -539,6 +652,16 @@
       if (err) console.error('QR error:', err);
     });
   }
+
+  $('btnTicketBackHome').addEventListener('click', function () { show('home'); });
+  $('btnTicketBackBuy').addEventListener('click', function () {
+    // после возврата — обновим карту и список (там уже помечено купленное место)
+    state.selectedSeat = null;
+    renderSeats();
+    renderMyTickets();
+    updateConfirm();
+    show('buy');
+  });
 
   /* ======================= СКАНЕР ======================= */
   const video = $('video');
@@ -666,6 +789,7 @@
   /* ======================= СТАРТ ======================= */
   renderDates();
   renderSeats();
+  renderMyTickets();
 
   if (typeof QRCode === 'undefined' || typeof jsQR === 'undefined') {
     console.warn('Одна из библиотек (QRCode / jsQR) не загрузилась — проверь интернет.');
