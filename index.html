@@ -196,8 +196,8 @@
     color: #fff;
   }
   .mt-info { flex: 1; min-width: 0; }
-  .mt-date { font-size: 14px; font-weight: 800; color: #3a2470; }
-  .mt-seat { font-size: 12px; font-weight: 700; color: #6b5b8a; margin-top: 2px; }
+  .mt-date { font-size: 14px; font-weight: 800; color: #3a2470; display: block; }
+  .mt-seat { font-size: 12px; font-weight: 700; color: #6b5b8a; margin-top: 2px; display: block; }
   .mt-arrow { font-size: 20px; color: #c73a68; flex: none; font-weight: 800; }
 
   /* ====== Билет ====== */
@@ -219,7 +219,7 @@
   .ticket-date { font-size: 19px; font-weight: 800; margin-top: 10px; color: #3a2470; }
   .ticket-seat { font-size: 28px; font-weight: 900; margin-top: 4px; color: #ff5c8d; }
   .dashed { border-top: 2px dashed #ffd23c; margin: 18px -20px; }
-  #qrCanvas { max-width: 100%; height: auto; border-radius: 10px; }
+  #qrCanvas { max-width: 100%; height: auto; border-radius: 10px; image-rendering: pixelated; }
   .ticket-id { font-size: 13px; color: #6b5b8a; margin-top: 10px; font-variant-numeric: tabular-nums; font-weight: 700; }
 
   /* ====== Камера ====== */
@@ -282,7 +282,6 @@
   <section class="screen" id="screen-buy">
     <button class="back" data-back="home">← Назад</button>
 
-    <!-- Мои билеты -->
     <div class="my-tickets-wrap" id="myTicketsWrap">
       <div class="my-tickets-head">
         <h2>🎫 Мои билеты</h2>
@@ -314,7 +313,7 @@
       <div class="ticket-date" id="tDate">—</div>
       <div class="ticket-seat" id="tSeat">—</div>
       <div class="dashed"></div>
-      <canvas id="qrCanvas"></canvas>
+      <canvas id="qrCanvas" width="260" height="260"></canvas>
       <div class="ticket-id" id="tId"></div>
     </div>
     <button class="btn" id="btnTicketBackHome">🏠 На главную</button>
@@ -351,20 +350,347 @@
 
 </div>
 
-<!-- Библиотеки: генерация QR и чтение QR -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- jsQR — только для чтения QR с камеры (может загрузиться с CDN).
+     Генерация QR теперь встроена и работает без интернета. -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
+/* ============================================================
+   ВСТРОЕННЫЙ QR-ГЕНЕРАТОР (byte mode, ECC level M, версии 1-6)
+   Не зависит от интернета. Возвращает матрицу модулей.
+   ============================================================ */
+var QR = (function () {
+  'use strict';
+
+  // ---- GF(256) ----
+  var EXP = new Uint8Array(512);
+  var LOG = new Uint8Array(256);
+  (function () {
+    var x = 1;
+    for (var i = 0; i < 255; i++) {
+      EXP[i] = x;
+      LOG[x] = i;
+      x <<= 1;
+      if (x & 0x100) x ^= 0x11d;
+    }
+    for (var j = 255; j < 512; j++) EXP[j] = EXP[j - 255];
+  })();
+
+  function gfMul(a, b) {
+    if (a === 0 || b === 0) return 0;
+    return EXP[LOG[a] + LOG[b]];
+  }
+
+  // ---- Генератор полинома Рида-Соломона ----
+  function rsGenPoly(n) {
+    var poly = [1];
+    for (var i = 0; i < n; i++) {
+      var next = new Array(poly.length + 1);
+      for (var k = 0; k < next.length; k++) next[k] = 0;
+      for (var j = 0; j < poly.length; j++) {
+        next[j] ^= poly[j];
+        next[j + 1] ^= gfMul(poly[j], EXP[i]);
+      }
+      poly = next;
+    }
+    return poly;
+  }
+
+  // ---- Кодирование Рида-Соломона ----
+  function rsEncode(data, n) {
+    var gen = rsGenPoly(n);
+    var res = data.slice();
+    for (var z = 0; z < n; z++) res.push(0);
+    for (var i = 0; i < data.length; i++) {
+      var coef = res[i];
+      if (coef !== 0) {
+        for (var j = 0; j < gen.length; j++) {
+          res[i + j] ^= gfMul(gen[j], coef);
+        }
+      }
+    }
+    return res.slice(data.length);
+  }
+
+  // ---- Параметры версий (ECC level M) ----
+  var VERSIONS = {
+    1: { size: 21, dataBytes: 16,  ecPerBlock: 10, blocks: 1, align: [] },
+    2: { size: 25, dataBytes: 28,  ecPerBlock: 16, blocks: 1, align: [6, 18] },
+    3: { size: 29, dataBytes: 44,  ecPerBlock: 26, blocks: 1, align: [6, 22] },
+    4: { size: 33, dataBytes: 64,  ecPerBlock: 18, blocks: 2, align: [6, 26] },
+    5: { size: 37, dataBytes: 86,  ecPerBlock: 24, blocks: 2, align: [6, 30] },
+    6: { size: 41, dataBytes: 108, ecPerBlock: 16, blocks: 4, align: [6, 34] }
+  };
+
+  function chooseVersion(byteLen) {
+    for (var v = 1; v <= 6; v++) {
+      var spec = VERSIONS[v];
+      var needed = 4 + 8 + byteLen * 8; // mode(4) + length(8) + data
+      if (needed <= spec.dataBytes * 8) return v;
+    }
+    return 6;
+  }
+
+  function utf8Bytes(str) {
+    var bytes = [];
+    for (var i = 0; i < str.length; i++) {
+      var code = str.charCodeAt(i);
+      if (code < 0x80) bytes.push(code);
+      else if (code < 0x800) {
+        bytes.push(0xC0 | (code >> 6), 0x80 | (code & 0x3F));
+      } else {
+        bytes.push(0xE0 | (code >> 12),
+                   0x80 | ((code >> 6) & 0x3F),
+                   0x80 | (code & 0x3F));
+      }
+    }
+    return bytes;
+  }
+
+  function makeCodewords(bytes, version) {
+    var spec = VERSIONS[version];
+    var bits = [];
+    function push(val, len) {
+      for (var i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
+    }
+    push(0b0100, 4);            // byte mode
+    push(bytes.length, 8);      // length (версии 1-9)
+    for (var i = 0; i < bytes.length; i++) push(bytes[i], 8);
+
+    var capacity = spec.dataBytes * 8;
+    var term = Math.min(4, capacity - bits.length);
+    for (var t = 0; t < term; t++) bits.push(0);
+    while (bits.length % 8 !== 0) bits.push(0);
+    var pad = 0xEC;
+    while (bits.length < capacity) {
+      push(pad, 8);
+      pad = (pad === 0xEC) ? 0x11 : 0xEC;
+    }
+
+    // биты -> байты
+    var dataBytes = [];
+    for (var b = 0; b < bits.length; b += 8) {
+      var val = 0;
+      for (var k = 0; k < 8; k++) val = (val << 1) | bits[b + k];
+      dataBytes.push(val);
+    }
+
+    // блоки + EC + перемежение
+    var numBlocks = spec.blocks;
+    var dataPerBlock = spec.dataBytes / numBlocks;
+    var ecPerBlock = spec.ecPerBlock;
+    var blocks = [];
+    for (var bi = 0; bi < numBlocks; bi++) {
+      var d = dataBytes.slice(bi * dataPerBlock, (bi + 1) * dataPerBlock);
+      blocks.push({ data: d, ec: rsEncode(d, ecPerBlock) });
+    }
+    var out = [];
+    for (var i2 = 0; i2 < dataPerBlock; i2++)
+      for (var bi2 = 0; bi2 < numBlocks; bi2++) out.push(blocks[bi2].data[i2]);
+    for (var i3 = 0; i3 < ecPerBlock; i3++)
+      for (var bi3 = 0; bi3 < numBlocks; bi3++) out.push(blocks[bi3].ec[i3]);
+    return out;
+  }
+
+  function buildMatrix(version, codewords) {
+    var spec = VERSIONS[version];
+    var size = spec.size;
+    var m = [], reserved = [];
+    for (var i = 0; i < size; i++) {
+      m.push(new Array(size).fill(0));
+      reserved.push(new Array(size).fill(false));
+    }
+    function set(r, c, v) { m[r][c] = v; reserved[r][c] = true; }
+
+    // ---- Finder patterns + separators ----
+    function placeFinder(row, col) {
+      for (var r = -1; r <= 7; r++) {
+        for (var c = -1; c <= 7; c++) {
+          var rr = row + r, cc = col + c;
+          if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+          var inPat = (r >= 0 && r <= 6 && c >= 0 && c <= 6);
+          var isBorder = (r === 0 || r === 6 || c === 0 || c === 6);
+          var isCenter = (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+          set(rr, cc, (inPat && (isBorder || isCenter)) ? 1 : 0);
+        }
+      }
+    }
+    placeFinder(0, 0);
+    placeFinder(0, size - 7);
+    placeFinder(size - 7, 0);
+
+    // ---- Timing patterns ----
+    for (var t = 8; t < size - 8; t++) {
+      var v = (t % 2 === 0) ? 1 : 0;
+      if (!reserved[6][t]) set(6, t, v);
+      if (!reserved[t][6]) set(t, 6, v);
+    }
+
+    // ---- Alignment patterns ----
+    var align = spec.align;
+    for (var ai = 0; ai < align.length; ai++) {
+      for (var aj = 0; aj < align.length; aj++) {
+        var ar = align[ai], ac = align[aj];
+        if ((ar <= 8 && ac <= 8) ||
+            (ar <= 8 && ac >= size - 9) ||
+            (ar >= size - 9 && ac <= 8)) continue;
+        for (var dr = -2; dr <= 2; dr++) {
+          for (var dc = -2; dc <= 2; dc++) {
+            var isB = (Math.abs(dr) === 2 || Math.abs(dc) === 2);
+            var isC = (dr === 0 && dc === 0);
+            set(ar + dr, ac + dc, (isB || isC) ? 1 : 0);
+          }
+        }
+      }
+    }
+
+    // ---- Резерв под format info ----
+    for (var k = 0; k < 9; k++) {
+      if (k === 6) continue;
+      reserved[8][k] = true;
+      reserved[k][8] = true;
+    }
+    for (var k2 = 0; k2 < 8; k2++) {
+      reserved[8][size - 1 - k2] = true;
+      reserved[size - 1 - k2][8] = true;
+    }
+    // Dark module
+    set(size - 8, 8, 1);
+
+    // ---- Укладка данных (зигзаг) ----
+    var bitIdx = 0;
+    var totalBits = codewords.length * 8;
+    var col = size - 1;
+    var upward = true;
+    while (col > 0) {
+      if (col === 6) col--;
+      for (var row = 0; row < size; row++) {
+        var r2 = upward ? (size - 1 - row) : row;
+        for (var dx = 0; dx < 2; dx++) {
+          var c2 = col - dx;
+          if (reserved[r2][c2]) continue;
+          var bit = 0;
+          if (bitIdx < totalBits) {
+            var byteVal = codewords[bitIdx >> 3];
+            bit = (byteVal >> (7 - (bitIdx & 7))) & 1;
+            bitIdx++;
+          }
+          m[r2][c2] = bit;
+          reserved[r2][c2] = true;
+        }
+      }
+      col -= 2;
+      upward = !upward;
+    }
+
+    // ---- Маска 0: (r + c) % 2 === 0 (только для не-функциональных) ----
+    for (var r3 = 0; r3 < size; r3++) {
+      for (var c3 = 0; c3 < size; c3++) {
+        if (isFunctionModule(r3, c3, version, size)) continue;
+        if ((r3 + c3) % 2 === 0) m[r3][c3] ^= 1;
+      }
+    }
+
+    // ---- Format info (ECC M, mask 0 → 0x5412) ----
+    placeFormatInfo(m, size);
+
+    return m;
+  }
+
+  function isFunctionModule(r, c, version, size) {
+    if (r <= 8 && c <= 8) return true;
+    if (r <= 8 && c >= size - 8) return true;
+    if (r >= size - 8 && c <= 8) return true;
+    if (r === 6 || c === 6) return true;
+    var align = VERSIONS[version].align;
+    for (var ai = 0; ai < align.length; ai++) {
+      for (var aj = 0; aj < align.length; aj++) {
+        var ar = align[ai], ac = align[aj];
+        if ((ar <= 8 && ac <= 8) ||
+            (ar <= 8 && ac >= size - 9) ||
+            (ar >= size - 9 && ac <= 8)) continue;
+        if (Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2) return true;
+      }
+    }
+    return false;
+  }
+
+  function placeFormatInfo(m, size) {
+    var fmt = 0x5412;                    // ECC M + mask 0
+    function bit(i) { return (fmt >> i) & 1; }
+
+    // Копия 1 (вокруг верхнего левого finder)
+    m[8][0] = bit(0); m[8][1] = bit(1); m[8][2] = bit(2); m[8][3] = bit(3);
+    m[8][4] = bit(4); m[8][5] = bit(5); m[8][7] = bit(6); m[8][8] = bit(7);
+    m[7][8] = bit(8); m[5][8] = bit(9); m[4][8] = bit(10); m[3][8] = bit(11);
+    m[2][8] = bit(12); m[1][8] = bit(13); m[0][8] = bit(14);
+
+    // Копия 2 (справа сверху и снизу слева)
+    m[size - 1][8] = bit(0); m[size - 2][8] = bit(1); m[size - 3][8] = bit(2);
+    m[size - 4][8] = bit(3); m[size - 5][8] = bit(4); m[size - 6][8] = bit(5);
+    m[size - 7][8] = bit(6);
+    m[8][size - 8] = bit(7); m[8][size - 7] = bit(8); m[8][size - 6] = bit(9);
+    m[8][size - 5] = bit(10); m[8][size - 4] = bit(11); m[8][size - 3] = bit(12);
+    m[8][size - 2] = bit(13); m[8][size - 1] = bit(14);
+  }
+
+  function encode(text) {
+    var bytes = utf8Bytes(text);
+    var version = chooseVersion(bytes.length);
+    var codewords = makeCodewords(bytes, version);
+    var matrix = buildMatrix(version, codewords);
+    return { matrix: matrix, size: VERSIONS[version].size };
+  }
+
+  return { encode: encode };
+})();
+
+/* ============================================================
+   Рисование QR на canvas
+   ============================================================ */
+function drawQR(canvas, text, options) {
+  options = options || {};
+  var qr = QR.encode(text);
+  var size = qr.size;
+  var matrix = qr.matrix;
+  var margin = options.margin != null ? options.margin : 4;
+  var totalModules = size + margin * 2;
+  var targetSize = options.width || 260;
+  var scale = Math.max(1, Math.floor(targetSize / totalModules));
+  var finalSize = totalModules * scale;
+
+  canvas.width = finalSize;
+  canvas.height = finalSize;
+  canvas.style.width = targetSize + 'px';
+  canvas.style.height = targetSize + 'px';
+
+  var ctx = canvas.getContext('2d');
+  var light = (options.color && options.color.light) || '#ffffff';
+  var dark  = (options.color && options.color.dark)  || '#000000';
+
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, finalSize, finalSize);
+  ctx.fillStyle = dark;
+  for (var r = 0; r < size; r++) {
+    for (var c = 0; c < size; c++) {
+      if (matrix[r][c]) {
+        ctx.fillRect((c + margin) * scale, (r + margin) * scale, scale, scale);
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Основное приложение
+   ============================================================ */
 (function () {
   'use strict';
 
-  /* ======================= КОНСТАНТЫ ======================= */
   const ROWS = 3;
   const SEATS = 5;
   const SECRET = 'sugar-ticket-42';
   const SOLD_KEY = 'ticket_sold_v1';
-  const MY_TICKETS_KEY = 'my_tickets_v1';    // купленные билеты (для "Мои билеты")
+  const MY_TICKETS_KEY = 'my_tickets_v1';
   const DATE_COUNT = 6;
 
   const WD_SHORT = ['вс','пн','вт','ср','чт','пт','сб'];
@@ -374,7 +700,7 @@
 
   const $ = (id) => document.getElementById(id);
 
-  /* ======================= УТИЛИТЫ ======================= */
+  /* ---------- Утилиты ---------- */
   function hashStr(str) {
     let h = 2166136261 >>> 0;
     for (let i = 0; i < str.length; i++) {
@@ -383,36 +709,28 @@
     }
     return h.toString(36);
   }
-
-  function makeSig(id, d, r, s) {
-    return hashStr([id, d, r, s, SECRET].join('|'));
-  }
-
+  function makeSig(id, d, r, s) { return hashStr([id, d, r, s, SECRET].join('|')); }
   function makeId() {
     const p = () => Math.random().toString(36).slice(2, 6).toUpperCase();
     return p() + '-' + p();
   }
-
   function dateKey(dt) {
     const y = dt.getFullYear();
     const m = String(dt.getMonth() + 1).padStart(2, '0');
     const d = String(dt.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }
-
   function parseKey(key) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
     if (!m) return null;
     return new Date(+m[1], +m[2] - 1, +m[3]);
   }
-
   function formatDate(key, short) {
     const dt = parseKey(key);
     if (!dt) return key;
     if (short) return `${WD_SHORT[dt.getDay()]}, ${dt.getDate()} ${MON_SHORT[dt.getMonth()]}`;
     return `${WD_FULL[dt.getDay()]}, ${dt.getDate()} ${MON_FULL[dt.getMonth()]}`;
   }
-
   function getAvailableDates(count) {
     const out = [];
     const cur = new Date();
@@ -426,7 +744,7 @@
     return out;
   }
 
-  /* ======================= "БАЗА" ЗАНЯТЫХ МЕСТ ======================= */
+  /* ---------- Занятые места ---------- */
   function getSold() {
     try { return JSON.parse(localStorage.getItem(SOLD_KEY)) || {}; }
     catch (e) { return {}; }
@@ -442,53 +760,45 @@
     localStorage.setItem(SOLD_KEY, JSON.stringify(sold));
   }
 
-  /* ======================= МОИ БИЛЕТЫ ======================= */
+  /* ---------- Мои билеты ---------- */
   function getMyTickets() {
     try { return JSON.parse(localStorage.getItem(MY_TICKETS_KEY)) || []; }
     catch (e) { return []; }
   }
-
   function saveMyTicket(t) {
     const list = getMyTickets();
-    list.unshift(t);          // новые — сверху
-    // храним максимум 20 последних
+    list.unshift(t);
     if (list.length > 20) list.length = 20;
     localStorage.setItem(MY_TICKETS_KEY, JSON.stringify(list));
   }
 
-  /* ======================= ФОРМАТ QR ======================= */
+  /* ---------- Формат QR ---------- */
   function encodeTicket(t) {
     return ['TICKET1', t.id, t.d, t.r, t.s, t.sig].join('|');
   }
-
   function decodeTicket(str) {
     const parts = String(str).trim().split('|');
     if (parts.length !== 6 || parts[0] !== 'TICKET1') return null;
-
     const id = parts[1], d = parts[2];
     const r = Number(parts[3]), s = Number(parts[4]), sig = parts[5];
-
     if (!id || !d || !sig) return null;
     if (!Number.isInteger(r) || !Number.isInteger(s)) return null;
     if (r < 1 || r > ROWS || s < 1 || s > SEATS) return null;
-
     const dt = parseKey(d);
     if (!dt) return null;
     if (dt.getDay() !== 6 && dt.getDay() !== 1) return null;
-
     if (makeSig(id, d, r, s) !== sig) return null;
-
     return { id: id, d: d, r: r, s: s, sig: sig };
   }
 
-  /* ======================= СОСТОЯНИЕ ======================= */
+  /* ---------- Состояние ---------- */
   const state = {
     dates: getAvailableDates(DATE_COUNT),
     selectedDate: null,
     selectedSeat: null
   };
 
-  /* ======================= НАВИГАЦИЯ ======================= */
+  /* ---------- Навигация ---------- */
   function show(name) {
     document.querySelectorAll('.screen').forEach(function (el) {
       el.classList.toggle('active', el.id === 'screen-' + name);
@@ -498,7 +808,6 @@
     if (name === 'buy') renderMyTickets();
     window.scrollTo(0, 0);
   }
-
   document.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { show(btn.dataset.back); });
   });
@@ -511,10 +820,9 @@
     updateConfirm();
     show('buy');
   });
-
   $('btnCheck').addEventListener('click', function () { show('scan'); });
 
-  /* ======================= ЭКРАН ПОКУПКИ ======================= */
+  /* ---------- Экран покупки ---------- */
   function renderDates() {
     const list = $('dateList');
     list.innerHTML = '';
@@ -536,33 +844,27 @@
   function renderSeats() {
     const map = $('seatMap');
     map.innerHTML = '';
-
     if (!state.selectedDate) {
       map.innerHTML = '<p class="hint">Сначала выбери день</p>';
       return;
     }
-
     for (let r = 1; r <= ROWS; r++) {
       const row = document.createElement('div');
       row.className = 'seat-row';
-
       const label = document.createElement('span');
       label.className = 'row-label';
       label.textContent = 'Ряд ' + r;
       row.appendChild(label);
-
       for (let s = 1; s <= SEATS; s++) {
         const b = document.createElement('button');
         b.className = 'seat';
         b.textContent = s;
-
         if (isSold(state.selectedDate, r, s)) {
           b.classList.add('sold');
           b.disabled = true;
         } else if (state.selectedSeat && state.selectedSeat.row === r && state.selectedSeat.seat === s) {
           b.classList.add('selected');
         }
-
         (function (rr, ss) {
           b.addEventListener('click', function () {
             state.selectedSeat = { row: rr, seat: ss };
@@ -570,7 +872,6 @@
             updateConfirm();
           });
         })(r, s);
-
         row.appendChild(b);
       }
       map.appendChild(row);
@@ -581,20 +882,16 @@
     $('btnConfirm').disabled = !(state.selectedDate && state.selectedSeat);
   }
 
-  /* ======================= МОИ БИЛЕТЫ — РЕНДЕР ======================= */
+  /* ---------- Мои билеты ---------- */
   function renderMyTickets() {
     const list = getMyTickets();
     const box = $('myTicketsList');
-    const cnt = $('myTicketsCount');
-
-    cnt.textContent = list.length;
+    $('myTicketsCount').textContent = list.length;
     box.innerHTML = '';
-
     if (list.length === 0) {
       box.innerHTML = '<div class="my-tickets-empty">Пока нет купленных билетов 🎈<br>Выбери день и место ниже</div>';
       return;
     }
-
     list.forEach(function (t) {
       const item = document.createElement('button');
       item.className = 'my-ticket-item';
@@ -613,49 +910,40 @@
     });
   }
 
-  /* ======================= ПОКУПКА ======================= */
+  /* ---------- Покупка ---------- */
   $('btnConfirm').addEventListener('click', function () {
     if (!state.selectedDate || !state.selectedSeat) return;
-
     const d = state.selectedDate;
     const r = state.selectedSeat.row;
     const s = state.selectedSeat.seat;
     const id = makeId();
     const ticket = { id: id, d: d, r: r, s: s };
     ticket.sig = makeSig(id, d, r, s);
-
     markSold(d, r, s);
-    saveMyTicket(ticket);          // запоминаем билет
+    saveMyTicket(ticket);
     renderTicket(ticket);
     show('ticket');
   });
 
-  /* ======================= БИЛЕТ + QR ======================= */
-  let currentTicket = null;
-
+  /* ---------- Билет + QR ---------- */
   function renderTicket(t) {
-    currentTicket = t;
     $('tDate').textContent = formatDate(t.d, false);
     $('tSeat').textContent = 'Ряд ' + t.r + ' · Место ' + t.s;
     $('tId').textContent = '№ ' + t.id;
-
     const canvas = $('qrCanvas');
-    if (typeof QRCode === 'undefined') {
-      $('tId').textContent = 'QR-библиотека не загрузилась (нужен интернет)';
-      return;
+    try {
+      drawQR(canvas, encodeTicket(t), {
+        width: 260,
+        margin: 4,
+        color: { dark: '#2a1a4a', light: '#ffffff' }
+      });
+    } catch (e) {
+      console.error('QR draw error:', e);
     }
-    QRCode.toCanvas(canvas, encodeTicket(t), {
-      width: 260,
-      margin: 1,
-      color: { dark: '#2a1a4a', light: '#ffffff' }
-    }, function (err) {
-      if (err) console.error('QR error:', err);
-    });
   }
 
   $('btnTicketBackHome').addEventListener('click', function () { show('home'); });
   $('btnTicketBackBuy').addEventListener('click', function () {
-    // после возврата — обновим карту и список (там уже помечено купленное место)
     state.selectedSeat = null;
     renderSeats();
     renderMyTickets();
@@ -663,11 +951,10 @@
     show('buy');
   });
 
-  /* ======================= СКАНЕР ======================= */
+  /* ---------- Сканер ---------- */
   const video = $('video');
   const scanCanvas = document.createElement('canvas');
   const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
-
   let stream = null;
   let rafId = null;
   let scanning = false;
@@ -677,19 +964,19 @@
     $('scanFallback').classList.remove('show');
     statusEl.textContent = 'Запрашиваю доступ к камере…';
 
+    if (typeof jsQR === 'undefined') {
+      statusEl.textContent = 'Библиотека сканирования не загрузилась — введи код вручную.';
+      $('scanFallback').classList.add('show');
+      return;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       statusEl.textContent = 'Браузер не поддерживает камеру.';
       $('scanFallback').classList.add('show');
       return;
     }
-
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
       video.srcObject = stream;
@@ -716,35 +1003,26 @@
 
   function tick() {
     if (!scanning) return;
-
     if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
       const MAXW = 640;
       const scale = Math.min(1, MAXW / video.videoWidth);
       const w = Math.round(video.videoWidth * scale);
       const h = Math.round(video.videoHeight * scale);
-
       scanCanvas.width = w;
       scanCanvas.height = h;
       scanCtx.drawImage(video, 0, 0, w, h);
-
       const img = scanCtx.getImageData(0, 0, w, h);
       let code = null;
-      try {
-        code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
-      } catch (e) { /* игнорируем */ }
-
-      if (code && code.data) {
-        handleScanResult(code.data);
-        return;
-      }
+      try { code = jsQR(img.data, w, h, { inversionAttempts: 'attemptBoth' }); }
+      catch (e) { /* ignore */ }
+      if (code && code.data) { handleScanResult(code.data); return; }
     }
     rafId = requestAnimationFrame(tick);
   }
 
   function handleScanResult(text) {
     stopScanner();
-    const ticket = decodeTicket(text);
-    renderResult(ticket);
+    renderResult(decodeTicket(text));
   }
 
   $('btnManual').addEventListener('click', function () {
@@ -753,13 +1031,12 @@
     handleScanResult(val);
   });
 
-  /* ======================= РЕЗУЛЬТАТ ======================= */
+  /* ---------- Результат ---------- */
   function renderResult(ticket) {
     const box = $('resultBox');
     const icon = $('resIcon');
     const title = $('resTitle');
     const details = $('resDetails');
-
     if (ticket) {
       box.className = 'result ok';
       icon.textContent = '✅';
@@ -777,7 +1054,6 @@
       details.innerHTML = '<p class="hint">Этот QR-код не является билетом цирка Ахметжан Адии.</p>';
       if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
     }
-
     show('result');
   }
 
@@ -786,14 +1062,10 @@
     show('scan');
   });
 
-  /* ======================= СТАРТ ======================= */
+  /* ---------- Старт ---------- */
   renderDates();
   renderSeats();
   renderMyTickets();
-
-  if (typeof QRCode === 'undefined' || typeof jsQR === 'undefined') {
-    console.warn('Одна из библиотек (QRCode / jsQR) не загрузилась — проверь интернет.');
-  }
 })();
 </script>
 </body>
