@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>🎪 Цирк Ахметжан Адии</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: #2a1a4a;
+    min-height: 100dvh;
+    padding: 18px 16px 40px;
+    display: flex;
+    justify-content: center;
+    background: #ffe9b5;
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(255,92,141,.55) 0, transparent 32%),
+      radial-gradient(circle at 88% 12%, rgba(77,171,247,.55) 0, transparent 30%),
+      radial-gradient(circle at 82% 88%, rgba(255,210,60,.7) 0, transparent 34%),
+      radial-gradient(circle at 15% 90%, rgba(120,214,133,.55) 0, transparent 32%),
+      radial-gradient(circle at 50% 50%, #fff3d4 0, #ffe1a8 70%, #ffd28a 100%);
+    background-attachment: fixed;
+  }
+  #app { width: 100%; max-width: 460px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: pop .25s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  /* ====== Шапка цирка ====== */
+  .circus-header {
+    text-align: center;
+    padding: 20px 16px 22px;
+    margin-bottom: 20px;
+    border-radius: 26px;
+    background: linear-gradient(160deg, #ff5c8d, #ff8a4c 55%, #ffd23c);
+    box-shadow: 0 14px 34px rgba(255,92,141,.4), inset 0 -6px 0 rgba(0,0,0,.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .circus-header::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 14px, transparent 14px 28px);
+    opacity: .55;
+    pointer-events: none;
+  }
+  .circus-header > * { position: relative; }
+  .circus-emoji { font-size: 46px; line-height: 1; display: block; margin-bottom: 6px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.2)); animation: swing 3s ease-in-out infinite; }
+  @keyframes swing { 0%,100% { transform: rotate(-6deg) } 50% { transform: rotate(6deg) } }
+  .circus-title {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.15;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(180,40,90,.5), 0 6px 14px rgba(0,0,0,.22);
+    font-weight: 800;
+    letter-spacing: .4px;
+  }
+  .circus-title small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; opacity: .85; margin-bottom: 6px; }
+  .circus-sub {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.9);
+    color: #b03070;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(0,0,0,.12);
+  }
+
+  .title { font-size: 21px; margin: 6px 0 14px; font-weight: 800; color: #3a2470; }
+  .subtitle { opacity: .7; margin: -6px 0 26px; font-size: 14px; font-weight: 600; }
+
+  /* ====== Кнопки ====== */
+  .btn {
+    display: block; width: 100%; padding: 19px 20px; margin-bottom: 13px;
+    border: none; border-radius: 20px; font-size: 17px; font-weight: 800;
+    font-family: inherit; color: #fff; cursor: pointer;
+    letter-spacing: .3px;
+    background: linear-gradient(135deg, #ff5c8d, #ff8a4c);
+    box-shadow: 0 9px 0 #c73a68, 0 14px 26px rgba(199,58,104,.4);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .btn:active {
+    transform: translateY(5px);
+    box-shadow: 0 4px 0 #c73a68, 0 8px 16px rgba(199,58,104,.35);
+  }
+  .btn.secondary {
+    background: linear-gradient(135deg, #4dabf7, #4dd4c4);
+    box-shadow: 0 9px 0 #2b7bb9, 0 14px 26px rgba(43,123,185,.35);
+  }
+  .btn.secondary:active { box-shadow: 0 4px 0 #2b7bb9, 0 8px 16px rgba(43,123,185,.3); }
+  .btn:disabled { opacity: .4; box-shadow: 0 6px 0 rgba(0,0,0,.15); cursor: not-allowed; transform: none; }
+
+  .back {
+    background: #fff; border: 2px solid #ffd23c; color: #b03070;
+    font-weight: 700; border-radius: 999px; font-size: 14px;
+    font-family: inherit; padding: 8px 16px; cursor: pointer; margin-bottom: 16px;
+    box-shadow: 0 3px 8px rgba(0,0,0,.08);
+  }
+
+  /* ====== Выбор даты ====== */
+  .dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .date-chip {
+    padding: 14px 10px; border-radius: 16px; cursor: pointer; font-family: inherit;
+    border: 2px solid #ffd23c; background: #fff;
+    color: #3a2470; font-size: 14px; font-weight: 700;
+    box-shadow: 0 4px 0 #f0b800;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .date-chip:active { transform: translateY(3px); box-shadow: 0 1px 0 #f0b800; }
+  .date-chip.selected {
+    background: linear-gradient(135deg, #ff5c8d, #ff8a4c);
+    border-color: #c73a68; color: #fff;
+    box-shadow: 0 4px 0 #c73a68;
+  }
+
+  /* ====== Места ====== */
+  .seat-row { display: flex; gap: 8px; align-items: center; margin-bottom: 9px; }
+  .row-label { width: 56px; font-size: 13px; flex: none; font-weight: 700; color: #3a2470; opacity: .75; }
+  .seat {
+    flex: 1; aspect-ratio: 1 / 1; border-radius: 14px; cursor: pointer;
+    border: 2px solid #ffd23c; background: #fff; color: #3a2470;
+    font-size: 16px; font-weight: 800; font-family: inherit;
+    box-shadow: 0 4px 0 #f0b800;
+    transition: transform .08s, box-shadow .08s, background .15s;
+  }
+  .seat:active { transform: translateY(3px); box-shadow: 0 1px 0 #f0b800; }
+  .seat.selected {
+    background: linear-gradient(135deg, #4dd4c4, #4dabf7);
+    border-color: #2b8fb9; color: #fff;
+    box-shadow: 0 4px 0 #2b8fb9;
+  }
+  .seat.sold {
+    background: #e6dcc8; border-color: #c9bda4; color: #a89a80;
+    box-shadow: 0 4px 0 #c9bda4;
+    cursor: not-allowed; text-decoration: line-through;
+  }
+  .hint { opacity: .65; font-size: 14px; font-weight: 600; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; font-weight: 700; color: #3a2470; margin: 16px 0 22px; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; border: 1.5px solid rgba(0,0,0,.15); }
+  .dot.free { background: #fff; }
+  .dot.sel { background: linear-gradient(135deg, #4dd4c4, #4dabf7); }
+  .dot.sold { background: #e6dcc8; }
+
+  /* ====== Билет ====== */
+  .ticket {
+    background: #fff; color: #2a1a4a; border-radius: 24px; padding: 22px 20px;
+    text-align: center; margin-bottom: 22px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    border: 3px dashed #ffd23c;
+    position: relative;
+  }
+  .ticket::before, .ticket::after {
+    content: ""; position: absolute; width: 22px; height: 22px; border-radius: 50%;
+    background: #ffe1a8; top: 50%; transform: translateY(-50%);
+    box-shadow: inset 0 0 0 2px #ffd23c;
+  }
+  .ticket::before { left: -13px; }
+  .ticket::after { right: -13px; }
+  .ticket-head { font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: #b03070; font-weight: 800; }
+  .ticket-date { font-size: 19px; font-weight: 800; margin-top: 10px; color: #3a2470; }
+  .ticket-seat { font-size: 28px; font-weight: 900; margin-top: 4px; color: #ff5c8d; }
+  .dashed { border-top: 2px dashed #ffd23c; margin: 18px -20px; }
+  #qrCanvas { max-width: 100%; height: auto; border-radius: 10px; }
+  .ticket-id { font-size: 13px; color: #6b5b8a; margin-top: 10px; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  /* ====== Камера ====== */
+  .camera-wrap {
+    position: relative; width: 100%; aspect-ratio: 3 / 4; border-radius: 22px;
+    overflow: hidden; background: #000; margin-bottom: 14px;
+    border: 4px solid #ffd23c; box-shadow: 0 12px 30px rgba(0,0,0,.3);
+  }
+  .camera-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scan-frame {
+    position: absolute; inset: 14%; border: 3px solid #4dd4c4;
+    border-radius: 20px; box-shadow: 0 0 0 9999px rgba(0,0,0,.35), 0 0 20px rgba(77,212,196,.8); pointer-events: none;
+  }
+  .status { text-align: center; font-size: 14px; font-weight: 700; color: #3a2470; margin: 0 0 16px; min-height: 20px; }
+
+  .fallback { display: none; }
+  .fallback.show { display: block; }
+  .fallback input {
+    width: 100%; padding: 14px; border-radius: 14px; margin-bottom: 10px;
+    border: 2px solid #ffd23c; background: #fff;
+    color: #3a2470; font-family: inherit; font-size: 14px; font-weight: 600;
+  }
+
+  /* ====== Результат ====== */
+  .result {
+    text-align: center; padding: 30px 20px; border-radius: 24px;
+    margin-bottom: 20px; background: #fff;
+    box-shadow: 0 12px 30px rgba(0,0,0,.15);
+  }
+  .result.ok  { background: linear-gradient(160deg, #d4f5e9, #b8f0dd); border: 3px solid #00b894; }
+  .result.bad { background: linear-gradient(160deg, #ffd9df, #ffc2cc); border: 3px solid #ff4757; }
+  .result-icon { font-size: 62px; line-height: 1; margin-bottom: 12px; }
+  .result h2 { margin: 0 0 18px; font-size: 22px; color: #2a1a4a; }
+  .res-row {
+    display: flex; justify-content: space-between; padding: 10px 2px;
+    border-bottom: 2px dashed rgba(0,0,0,.08); font-size: 15px; font-weight: 700; color: #3a2470;
+  }
+  .res-row:last-child { border-bottom: none; }
+  .res-row span { opacity: .6; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ======= ГЛАВНАЯ ======= -->
+  <section class="screen active" id="screen-home">
+    <div class="circus-header">
+      <span class="circus-emoji">🎪</span>
+      <h1 class="circus-title">
+        <small>Добро пожаловать в</small>
+        Цирк Ахметжан Адии
+      </h1>
+      <span class="circus-sub">✨ Билеты на представление ✨</span>
+    </div>
+    <button class="btn" id="btnBuy">🎟️ Купить билет</button>
+    <button class="btn secondary" id="btnCheck">🔍 Проверить билет</button>
+  </section>
+
+  <!-- ======= ПОКУПКА ======= -->
+  <section class="screen" id="screen-buy">
+    <button class="back" data-back="home">← Назад</button>
+    <h2 class="title">🎪 Выбери день</h2>
+    <div class="dates" id="dateList"></div>
+
+    <h2 class="title" style="margin-top:26px">💺 Выбери место</h2>
+    <div id="seatMap"><p class="hint">Сначала выбери день</p></div>
+
+    <div class="legend">
+      <span><i class="dot free"></i>Свободно</span>
+      <span><i class="dot sel"></i>Выбрано</span>
+      <span><i class="dot sold"></i>Занято</span>
+    </div>
+
+    <button class="btn" id="btnConfirm" disabled>Купить билет</button>
+  </section>
+
+  <!-- ======= БИЛЕТ ======= -->
+  <section class="screen" id="screen-ticket">
+    <h2 class="title">🎟️ Ваш билет</h2>
+    <div class="ticket">
+      <div class="ticket-head">Цирк Ахметжан Адии</div>
+      <div class="ticket-date" id="tDate">—</div>
+      <div class="ticket-seat" id="tSeat">—</div>
+      <div class="dashed"></div>
+      <canvas id="qrCanvas"></canvas>
+      <div class="ticket-id" id="tId"></div>
+    </div>
+    <button class="btn" data-back="home">Готово</button>
+  </section>
+
+  <!-- ======= СКАНЕР ======= -->
+  <section class="screen" id="screen-scan">
+    <button class="back" data-back="home">← Назад</button>
+    <h2 class="title">🔍 Сканируй QR-код</h2>
+    <div class="camera-wrap">
+      <video id="video" playsinline muted autoplay></video>
+      <div class="scan-frame"></div>
+    </div>
+    <p class="status" id="scanStatus">Запрашиваю доступ к камере…</p>
+
+    <div class="fallback" id="scanFallback">
+      <p class="hint">Камера недоступна. Можно вставить код билета вручную:</p>
+      <input id="manualInput" placeholder="TICKET1|AB12|2025-01-04|2|3|sig" />
+      <button class="btn secondary" id="btnManual">Проверить код</button>
+    </div>
+  </section>
+
+  <!-- ======= РЕЗУЛЬТАТ ======= -->
+  <section class="screen" id="screen-result">
+    <div class="result" id="resultBox">
+      <div class="result-icon" id="resIcon">✅</div>
+      <h2 id="resTitle">Билет действителен</h2>
+      <div id="resDetails"></div>
+    </div>
+    <button class="btn" id="btnScanAgain">Проверить ещё</button>
+    <button class="btn secondary" data-back="home">На главную</button>
+  </section>
+
+</div>
+
+<!-- Библиотеки: генерация QR и чтение QR -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ======================= КОНСТАНТЫ ======================= */
+  const ROWS = 3;
+  const SEATS = 5;
+  const SECRET = 'sugar-ticket-42';
+  const SOLD_KEY = 'ticket_sold_v1';
+  const DATE_COUNT = 6;
+
+  const WD_SHORT = ['вс','пн','вт','ср','чт','пт','сб'];
+  const WD_FULL  = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  const MON_FULL  = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+  const $ = (id) => document.getElementById(id);
+
+  /* ======================= УТИЛИТЫ ======================= */
+  function hashStr(str) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h.toString(36);
+  }
+
+  function makeSig(id, d, r, s) {
+    return hashStr([id, d, r, s, SECRET].join('|'));
+  }
+
+  function makeId() {
+    const p = () => Math.random().toString(36).slice(2, 6).toUpperCase();
+    return p() + '-' + p();
+  }
+
+  function dateKey(dt) {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function parseKey(key) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+    if (!m) return null;
+    return new Date(+m[1], +m[2] - 1, +m[3]);
+  }
+
+  function formatDate(key, short) {
+    const dt = parseKey(key);
+    if (!dt) return key;
+    if (short) return `${WD_SHORT[dt.getDay()]}, ${dt.getDate()} ${MON_SHORT[dt.getMonth()]}`;
+    return `${WD_FULL[dt.getDay()]}, ${dt.getDate()} ${MON_FULL[dt.getMonth()]}`;
+  }
+
+  function getAvailableDates(count) {
+    const out = [];
+    const cur = new Date();
+    cur.setHours(0, 0, 0, 0);
+    let guard = 0;
+    while (out.length < count && guard++ < 500) {
+      cur.setDate(cur.getDate() + 1);
+      const wd = cur.getDay();
+      if (wd === 6 || wd === 1) out.push(dateKey(cur));
+    }
+    return out;
+  }
+
+  /* ======================= "БАЗА" ЗАНЯТЫХ МЕСТ ======================= */
+  function getSold() {
+    try { return JSON.parse(localStorage.getItem(SOLD_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function isSold(d, r, s) {
+    const sold = getSold();
+    return Array.isArray(sold[d]) && sold[d].indexOf(r + '-' + s) !== -1;
+  }
+  function markSold(d, r, s) {
+    const sold = getSold();
+    if (!Array.isArray(sold[d])) sold[d] = [];
+    sold[d].push(r + '-' + s);
+    localStorage.setItem(SOLD_KEY, JSON.stringify(sold));
+  }
+
+  /* ======================= ФОРМАТ QR ======================= */
+  function encodeTicket(t) {
+    return ['TICKET1', t.id, t.d, t.r, t.s, t.sig].join('|');
+  }
+
+  function decodeTicket(str) {
+    const parts = String(str).trim().split('|');
+    if (parts.length !== 6 || parts[0] !== 'TICKET1') return null;
+
+    const id = parts[1], d = parts[2];
+    const r = Number(parts[3]), s = Number(parts[4]), sig = parts[5];
+
+    if (!id || !d || !sig) return null;
+    if (!Number.isInteger(r) || !Number.isInteger(s)) return null;
+    if (r < 1 || r > ROWS || s < 1 || s > SEATS) return null;
+
+    const dt = parseKey(d);
+    if (!dt) return null;
+    if (dt.getDay() !== 6 && dt.getDay() !== 1) return null;
+
+    if (makeSig(id, d, r, s) !== sig) return null;
+
+    return { id: id, d: d, r: r, s: s, sig: sig };
+  }
+
+  /* ======================= СОСТОЯНИЕ ======================= */
+  const state = {
+    dates: getAvailableDates(DATE_COUNT),
+    selectedDate: null,
+    selectedSeat: null
+  };
+
+  /* ======================= НАВИГАЦИЯ ======================= */
+  function show(name) {
+    document.querySelectorAll('.screen').forEach(function (el) {
+      el.classList.toggle('active', el.id === 'screen-' + name);
+    });
+    if (name === 'scan') startScanner();
+    else stopScanner();
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('[data-back]').forEach(function (btn) {
+    btn.addEventListener('click', function () { show(btn.dataset.back); });
+  });
+
+  $('btnBuy').addEventListener('click', function () {
+    state.selectedSeat = null;
+    renderDates();
+    renderSeats();
+    updateConfirm();
+    show('buy');
+  });
+
+  $('btnCheck').addEventListener('click', function () { show('scan'); });
+
+  /* ======================= ЭКРАН ПОКУПКИ ======================= */
+  function renderDates() {
+    const list = $('dateList');
+    list.innerHTML = '';
+    state.dates.forEach(function (key) {
+      const b = document.createElement('button');
+      b.className = 'date-chip' + (state.selectedDate === key ? ' selected' : '');
+      b.textContent = formatDate(key, true);
+      b.addEventListener('click', function () {
+        state.selectedDate = key;
+        state.selectedSeat = null;
+        renderDates();
+        renderSeats();
+        updateConfirm();
+      });
+      list.appendChild(b);
+    });
+  }
+
+  function renderSeats() {
+    const map = $('seatMap');
+    map.innerHTML = '';
+
+    if (!state.selectedDate) {
+      map.innerHTML = '<p class="hint">Сначала выбери день</p>';
+      return;
+    }
+
+    for (let r = 1; r <= ROWS; r++) {
+      const row = document.createElement('div');
+      row.className = 'seat-row';
+
+      const label = document.createElement('span');
+      label.className = 'row-label';
+      label.textContent = 'Ряд ' + r;
+      row.appendChild(label);
+
+      for (let s = 1; s <= SEATS; s++) {
+        const b = document.createElement('button');
+        b.className = 'seat';
+        b.textContent = s;
+
+        if (isSold(state.selectedDate, r, s)) {
+          b.classList.add('sold');
+          b.disabled = true;
+        } else if (state.selectedSeat && state.selectedSeat.row === r && state.selectedSeat.seat === s) {
+          b.classList.add('selected');
+        }
+
+        (function (rr, ss) {
+          b.addEventListener('click', function () {
+            state.selectedSeat = { row: rr, seat: ss };
+            renderSeats();
+            updateConfirm();
+          });
+        })(r, s);
+
+        row.appendChild(b);
+      }
+      map.appendChild(row);
+    }
+  }
+
+  function updateConfirm() {
+    $('btnConfirm').disabled = !(state.selectedDate && state.selectedSeat);
+  }
+
+  $('btnConfirm').addEventListener('click', function () {
+    if (!state.selectedDate || !state.selectedSeat) return;
+
+    const d = state.selectedDate;
+    const r = state.selectedSeat.row;
+    const s = state.selectedSeat.seat;
+    const id = makeId();
+    const ticket = { id: id, d: d, r: r, s: s };
+    ticket.sig = makeSig(id, d, r, s);
+
+    markSold(d, r, s);
+    renderTicket(ticket);
+    show('ticket');
+  });
+
+  /* ======================= БИЛЕТ + QR ======================= */
+  function renderTicket(t) {
+    $('tDate').textContent = formatDate(t.d, false);
+    $('tSeat').textContent = 'Ряд ' + t.r + ' · Место ' + t.s;
+    $('tId').textContent = '№ ' + t.id;
+
+    const canvas = $('qrCanvas');
+    if (typeof QRCode === 'undefined') {
+      $('tId').textContent = 'QR-библиотека не загрузилась (нужен интернет)';
+      return;
+    }
+    QRCode.toCanvas(canvas, encodeTicket(t), {
+      width: 260,
+      margin: 1,
+      color: { dark: '#2a1a4a', light: '#ffffff' }
+    }, function (err) {
+      if (err) console.error('QR error:', err);
+    });
+  }
+
+  /* ======================= СКАНЕР ======================= */
+  const video = $('video');
+  const scanCanvas = document.createElement('canvas');
+  const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+
+  let stream = null;
+  let rafId = null;
+  let scanning = false;
+
+  async function startScanner() {
+    const statusEl = $('scanStatus');
+    $('scanFallback').classList.remove('show');
+    statusEl.textContent = 'Запрашиваю доступ к камере…';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusEl.textContent = 'Браузер не поддерживает камеру.';
+      $('scanFallback').classList.add('show');
+      return;
+    }
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
+      scanning = true;
+      statusEl.textContent = 'Наведи камеру на QR-код билета';
+      rafId = requestAnimationFrame(tick);
+    } catch (err) {
+      console.warn(err);
+      statusEl.textContent = 'Не удалось открыть камеру: ' + (err.message || err.name);
+      $('scanFallback').classList.add('show');
+    }
+  }
+
+  function stopScanner() {
+    scanning = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (stream) {
+      stream.getTracks().forEach(function (tr) { tr.stop(); });
+      stream = null;
+    }
+    if (video) video.srcObject = null;
+  }
+
+  function tick() {
+    if (!scanning) return;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
+      const MAXW = 640;
+      const scale = Math.min(1, MAXW / video.videoWidth);
+      const w = Math.round(video.videoWidth * scale);
+      const h = Math.round(video.videoHeight * scale);
+
+      scanCanvas.width = w;
+      scanCanvas.height = h;
+      scanCtx.drawImage(video, 0, 0, w, h);
+
+      const img = scanCtx.getImageData(0, 0, w, h);
+      let code = null;
+      try {
+        code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+      } catch (e) { /* игнорируем */ }
+
+      if (code && code.data) {
+        handleScanResult(code.data);
+        return;
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function handleScanResult(text) {
+    stopScanner();
+    const ticket = decodeTicket(text);
+    renderResult(ticket);
+  }
+
+  $('btnManual').addEventListener('click', function () {
+    const val = $('manualInput').value.trim();
+    if (!val) return;
+    handleScanResult(val);
+  });
+
+  /* ======================= РЕЗУЛЬТАТ ======================= */
+  function renderResult(ticket) {
+    const box = $('resultBox');
+    const icon = $('resIcon');
+    const title = $('resTitle');
+    const details = $('resDetails');
+
+    if (ticket) {
+      box.className = 'result ok';
+      icon.textContent = '✅';
+      title.textContent = 'Билет действителен';
+      details.innerHTML =
+        '<div class="res-row"><span>Дата</span><b>' + formatDate(ticket.d, false) + '</b></div>' +
+        '<div class="res-row"><span>Ряд</span><b>' + ticket.r + '</b></div>' +
+        '<div class="res-row"><span>Место</span><b>' + ticket.s + '</b></div>' +
+        '<div class="res-row"><span>Билет</span><b>№ ' + ticket.id + '</b></div>';
+      if (navigator.vibrate) navigator.vibrate(120);
+    } else {
+      box.className = 'result bad';
+      icon.textContent = '❌';
+      title.textContent = 'Билет недействителен';
+      details.innerHTML = '<p class="hint">Этот QR-код не является билетом цирка Ахметжан Адии.</p>';
+      if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+    }
+
+    show('result');
+  }
+
+  $('btnScanAgain').addEventListener('click', function () {
+    $('manualInput').value = '';
+    show('scan');
+  });
+
+  /* ======================= СТАРТ ======================= */
+  renderDates();
+  renderSeats();
+
+  if (typeof QRCode === 'undefined' || typeof jsQR === 'undefined') {
+    console.warn('Одна из библиотек (QRCode / jsQR) не загрузилась — проверь интернет.');
+  }
+})();
+</script>
+</body>
+</html>
